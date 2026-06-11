@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SASE Feedback Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0f0f11;
+      color: #e8e6e1;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    header {
+      max-width: 900px;
+      margin: 0 auto 40px;
+      border-bottom: 1px solid #2a2a2e;
+      padding-bottom: 24px;
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; color: #fff; }
+    header p  { margin-top: 6px; font-size: 0.85rem; color: #666; }
+
+    .step { max-width: 900px; margin: 0 auto 48px; }
+
+    .step-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #5b6aff; margin-bottom: 10px;
+    }
+
+    .step h2 { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 16px; }
+
+
+
+    textarea {
+      width: 100%; height: 300px;
+      background: #18181c; border: 1px solid #2a2a2e; border-radius: 8px;
+      color: #e8e6e1; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; line-height: 1.6; padding: 16px;
+      resize: vertical; outline: none; transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: #5b6aff; }
+    textarea::placeholder { color: #3a3a40; }
+
+    button {
+      padding: 10px 24px; background: #5b6aff; color: #fff;
+      border: none; border-radius: 6px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    button:hover { background: #4a59ee; }
+    button:disabled { background: #2a2a2e; color: #555; cursor: not-allowed; }
+    button.secondary {
+      background: transparent; border: 1px solid #2a2a2e; color: #aaa;
+    }
+    button.secondary:hover { border-color: #5b6aff; color: #5b6aff; background: transparent; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+
+    /* Event cards */
+    .event-count { font-size: 0.8rem; color: #666; margin-bottom: 20px; }
+    .event-count span { color: #5b6aff; font-weight: 600; }
+
+    .event-card {
+      background: #18181c; border: 1px solid #2a2a2e;
+      border-radius: 8px; margin-bottom: 12px; overflow: hidden;
+    }
+
+    .event-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #2a2a2e;
+      cursor: pointer; user-select: none;
+    }
+    .event-card-header:hover { background: #1e1e23; }
+
+    .event-title-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .event-name { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .event-meta { font-size: 0.75rem; color: #555; }
+
+    .badge {
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+      font-weight: 600; white-space: nowrap;
+    }
+    .badge-blue  { background: #1e2440; color: #5b6aff; }
+    .badge-dim   { background: #1e1e23; color: #444; }
+    .badge-green { background: #0f2820; color: #4ade80; }
+
+    .chevron { color: #444; font-size: 0.8rem; transition: transform 0.2s; flex-shrink: 0; }
+    .chevron.open { transform: rotate(90deg); }
+
+    .event-card-body { display: none; padding: 16px 18px; }
+    .event-card-body.open { display: block; }
+
+    .field-group { margin-bottom: 14px; }
+    .field-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #444; margin-bottom: 6px;
+    }
+    .field-items { display: flex; flex-direction: column; gap: 4px; }
+    .field-item {
+      font-size: 0.8rem; color: #bbb; padding: 5px 10px;
+      background: #111114; border-radius: 4px;
+      border-left: 2px solid #2a2a2e; line-height: 1.5;
+    }
+    .field-empty { font-size: 0.78rem; color: #333; font-style: italic; }
+
+    /* Position labels editor */
+    .position-row {
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; margin-top: 8px;
+    }
+    .position-tag {
+      font-size: 0.72rem; padding: 3px 10px; border-radius: 4px;
+      background: #1a2540; color: #7b8fff; border: 1px solid #2a3860;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .position-tag button {
+      padding: 0; background: none; border: none;
+      color: #555; font-size: 0.8rem; cursor: pointer; line-height: 1;
+    }
+    .position-tag button:hover { color: #ff6b6b; background: none; }
+
+    .add-position {
+      display: flex; gap: 6px; align-items: center; margin-top: 8px;
+    }
+    .add-position select {
+      background: #18181c; border: 1px solid #2a2a2e; border-radius: 4px;
+      color: #aaa; font-size: 0.78rem; padding: 4px 8px; outline: none;
+    }
+    .add-position button {
+      padding: 4px 12px; font-size: 0.75rem;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #2a2a2e; border-top-color: #5b6aff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Status */
+    #status {
+      max-width: 900px; margin: 0 auto;
+      font-size: 0.78rem; color: #555; padding-top: 8px;
+    }
+    #status.error   { color: #ff6b6b; }
+    #status.success { color: #4ade80; }
+    #status.info    { color: #5b6aff; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SASE Feedback Tool</h1>
+  <p>Paste your pro/con doc → review events → label by board position → generate summaries.</p>
+</header>
+
+<!-- Step 1: API Key + Input -->
+<div class="step" id="step-input">
+  <div class="step-label">Step 1</div>
+  <h2>Paste your pro/con doc</h2>
+
+  <textarea id="raw-input" placeholder="Paste your Google Doc text here..."></textarea>
+  <div class="btn-row">
+    <button onclick="handleParse()">Parse Events</button>
+  </div>
+</div>
+
+<!-- Step 2: Review -->
+<div class="step hidden" id="step-review">
+  <div class="step-label">Step 2</div>
+  <h2>Review parsed events</h2>
+  <div class="event-count">Found <span id="event-count-num">0</span> events. Click any to expand.</div>
+  <div id="event-list"></div>
+  <div class="btn-row">
+    <button id="label-btn" onclick="handleLabel()">Label by Position with AI →</button>
+  </div>
+</div>
+
+<!-- Step 3: Review Labels -->
+<div class="step hidden" id="step-labels">
+  <div class="step-label">Step 3</div>
+  <h2>Review position labels</h2>
+  <p style="font-size:0.82rem;color:#666;margin-bottom:20px;">
+    Add or remove position labels for each event. These control which summary each event appears in.
+  </p>
+  <div id="label-list"></div>
+  <div class="btn-row">
+    <button id="generate-btn" onclick="handleGenerate()">Generate Summaries →</button>
+  </div>
+</div>
+
+<!-- Step 4: Output -->
+<div class="step hidden" id="step-output">
+  <div class="step-label">Step 4</div>
+  <h2>Position summaries</h2>
+  <div id="output-list"></div>
+</div>
+
+<div id="status"></div>
+
+<script>
+// ── Board positions list ───────────────────────────────────────────────────
+const POSITIONS = [
+  "General Body Meetings",
+  "President",
+  "Internal Vice President",
+  "External Vice President",
+  "Treasurer",
+  "Secretary",
+  "Public Relations",
+  "Advancement Chair",
+  "Community Outreach Chair",
+  "Fundraising Chair",
+  "Gator Rover President",
+  "Hackathon Chair",
+  "Historian",
+  "Member Involvement Chair",
+  "Multimedia Chair",
+  "Networking Chair",
+  "Projects Chair",
+  "Science Chair",
+  "Social Chair",
+  "Sports Coordinator",
+  "Webmaster"
+];
+
+const POSITION_CONTEXT = `Assignment Rules:
+Sort each event's feedback into one or more board positions using the definitions below.
+- If an event is relevant to multiple positions, include it under all relevant positions. Prioritize the position that owns the event type, then include secondary positions only if there is specific, actionable feedback for them.
+- GBMs should be their own category ("General Body Meetings"), but aspects of GBMs relating to other positions such as Alumni Spotlights, room bookings, and budgets should also be sorted into their respective positions.
+- If an event was run by SASE Interns, sort it under "Member Involvement Chair" AND the position that owns that event type.
+- If feedback mentions dates, times, room conflicts, or scheduling issues, always flag it under "Secretary" in addition to the primary position.
+- If feedback mentions money, costs, budgeting, reimbursements, supplies, or inventory, always flag it under "Treasurer" in addition to the primary position.
+- If an event has no clear owner, use the event content and feedback to infer the closest match.
+
+Non-Board Categories:
+General Body Meetings (GBMs): Should be their own category. Any aspects relating to other positions (Alumni Spotlights, room bookings, budgets) should also be sorted into their respective positions.
+
+Board Positions:
+
+President
+Oversees: All chairs and committees.
+Event Types: General planning overview of large SASE events, logistics for conferences.
+Examples: SASE National Convention/Stem Connect, SERC, SASEHacks, Elections.
+
+Internal Vice President
+Oversees: Mentor-mentee program, general board wellbeing, semesterly banquets.
+Event Types: Mentor-Mentee events, Banquets, Fall and Spring Planning.
+Examples: M&M Speed Friending, M&M Pairings, M&M Week, Spring Banquet, Fall Banquet.
+
+External Vice President
+Oversees: Company events and sponsorships, AASA Show.
+Event Types: Company fairs and recruiter events, company information sessions.
+Examples: Gators With Industry, Sandia Trivia Night, ExxonMobil Resume Review, AASA Show, Internship Panel, any mention of sponsorships.
+
+Treasurer
+Oversees: Budgeting and SASE Expenses, fundraisers, reimbursements, sponsorship money, SASE inventory.
+Event Types: Manages financial and inventory aspect of all events.
+Examples: GBMs, Fundraisers, any mention of money, inventory, funding, budget.
+
+Secretary
+Oversees: Board meetings, SASE Discord, room bookings, tabling booking, general SASE population statistics.
+Event Types: Manages room bookings and board meetings.
+Examples: Fall/Spring Planning, any mention of rooms, times, dates, meeting efficiency, sign ins, and Discord. Always note specific dates/times flagged.
+
+Public Relations
+Oversees: General public relations, SASE Instagram posts and stories, tabling, SASE Spirit Week.
+Event Types: Tabling, spirit week, any mention of Instagram.
+Examples: Any mention of Instagram.
+
+Advancement Chair
+Oversees: Professional development events, SASE Professional Resources, Pi room booking, Board office hours.
+Event Types: Professional Development workshops.
+Examples: Evening With Professors, How to Grow Your Resume Workshop, Apply-A-Thon.
+
+Community Outreach Chair
+Oversees: K-12 outreach and service events.
+Event Types: Volunteering, donations, drives, K-12 events.
+Examples: Adopt-A-Street, Dreamers Garden, Blanket Making, Chiles Elementary, UF Admissions event, Crafts for Canines.
+
+Fundraising Chair
+Oversees: Fundraising events, concessioning, and food aftersocials.
+Event Types: Food Aftersocials, Fundraisers, Concessioning.
+Note: Assign here if fundraising is the primary purpose. If food is incidental to a social event, assign to Social Chair instead.
+Examples: Concessioning, Cane's Aftersocial, Pie-Board Fundraiser, Mochi Fundraiser.
+
+Gator Rover President
+Oversees: Operations of the Gator Rover Team (formerly SASE Engineering Team / SET).
+Event Types: Information sessions and presentations related to Gator Rover/SET.
+Examples: SET Information Session, Spring Banquet Presentation, SET Cross-Bonding Social.
+
+Hackathon Chair
+Oversees: Operations of the SASEHacks Hackathon.
+Event Types: SASEHacks, SASEHacks workshops.
+Examples: SASEHacks, Pre-Hackathon Workshop.
+
+Historian
+Oversees: Documentation of SASE events through photos and videos.
+Event Types: Creates videos for AASA, Banquet, and awards.
+Examples: Headshot Fundraiser, Board Headshots, any mention of reel, video, or photos.
+
+Member Involvement Chair
+Oversees: The SASE Interns program.
+Event Types: Any SASE interns-run event, interns meetings, interns-only socials.
+Examples: Any event that mentions SASE Interns.
+
+Multimedia Chair
+Oversees: Design and sale of merchandise, creating graphics for events.
+Event Types: Merchandise Drops.
+Examples: Oceanic Merch Drop, Atlas Merch Drop, any mention of graphics.
+
+Networking Chair
+Oversees: Alumni relations, alumni events, stoles and cords, SASE LinkedIn.
+Event Types: Alumni Spotlights, Alumni events.
+Examples: Stoles and Cords, GBM Alumni Spotlight, Alumni Networking Night, Design Your Future.
+
+Projects Chair
+Oversees: Operations of the SASE Projects Program and technical workshops.
+Event Types: Technical Skill Workshops.
+Examples: CAD & 3D Printing Workshop, Logic Gates Workshop.
+
+Science Chair
+Oversees: Science, research, and pre-med development of SASE members.
+Event Types: Science events, Evening with Professors, Lab Tours, Science Week Events, Grad School, Research, Pre-med events.
+Examples: Lab Tours, Grad School Workshop, Science Week, Research Workshop.
+
+Social Chair
+Oversees: Social events.
+Event Types: Casual socials, non-food aftersocials, cultural events, social collaborations, potlucks.
+Note: Assign here if food is incidental to the social. If fundraising is the primary purpose, assign to Fundraising Chair.
+Examples: New Years Social, Grub and Games, FSA x SASE Potluck.
+
+Sports Coordinator
+Oversees: The SASE Sports Program and Intramurals (IM).
+Event Types: Intramurals, casual sports, tournaments, E-Sports.
+Examples: Mario Kart Tourney, Pickleball Social, Beach Volleyball Tournament, Esports Tournament.
+
+Webmaster
+Oversees: Operations of SASE Software Team (SWT).
+Event Types: SWT related events.
+Examples: SWT Informational Session, Spring Banquet Presentation, SWT Cross-Bonding Social.`;
+
+// ── Parser ─────────────────────────────────────────────────────────────────
+function getFieldKey(line) {
+  const lower = line.toLowerCase().trim();
+  if (lower.startsWith("date:"))             return "date";
+  if (lower.startsWith("attendance:"))       return "attendance";
+  if (lower.startsWith("pros:"))             return "pros";
+  if (lower.startsWith("cons:"))             return "cons";
+  if (lower.startsWith("comments:"))         return "comments";
+  if (lower.startsWith("notes for future:")) return "notes_for_future";
+  return null;
+}
+function parseAttendance(line) {
+  const match = line.match(/\d+/);
+  return match ? parseInt(match[0]) : null;
+}
+function extractFieldValue(line) {
+  return line.slice(line.indexOf(":") + 1).trim();
+}
+function stripBullet(line) {
+  return line.trimStart().replace(/^[\*\-]\s*/, "").trim();
+}
+function newEvent(name) {
+  return { event_name: name, date: "", attendance: null, pros: [], cons: [], comments: [], notes_for_future: [], positions: [] };
+}
+function parseSASEDoc(rawText) {
+  const lines = rawText.split("\n");
+  const events = [];
+  let currentEvent = null, currentField = null;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === "") {
+      if (currentField === "notes_for_future") currentField = null;
+      continue;
+    }
+    const fieldKey = getFieldKey(line);
+    if (fieldKey) {
+      currentField = fieldKey;
+      if (fieldKey === "date" && currentEvent)       currentEvent.date = extractFieldValue(line);
+      if (fieldKey === "attendance" && currentEvent) currentEvent.attendance = parseAttendance(extractFieldValue(line));
+      continue;
+    }
+    if (currentField && currentEvent && Array.isArray(currentEvent[currentField])) {
+      const content = stripBullet(line);
+      if (content !== "") currentEvent[currentField].push(content);
+      continue;
+    }
+    if (currentEvent !== null) events.push(currentEvent);
+    currentEvent = newEvent(line);
+    currentField = null;
+  }
+  if (currentEvent !== null) events.push(currentEvent);
+  return events;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────
+let parsedEvents = [];
+
+// ── Config — paste your Gemini API key here ────────────────────────────────
+const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
+
+// ── Gemini API ─────────────────────────────────────────────────────────────
+async function callGemini(prompt) {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
+    throw new Error("Add your Gemini API key to the GEMINI_API_KEY variable at the top of the script.");
+  }
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2 }
+      })
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return text;
+}
+
+// Strip markdown fences and extract the first JSON array or object from a string
+function extractJSON(raw) {
+  // Remove ```json ... ``` or ``` ... ``` wrappers
+  let clean = raw.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+  // Find the first [ or { and the matching closing bracket
+  const startArr = clean.indexOf("[");
+  const startObj = clean.indexOf("{");
+  const start = startArr === -1 ? startObj : startObj === -1 ? startArr : Math.min(startArr, startObj);
+
+  if (start === -1) throw new Error("No JSON found in response.\n\nRaw response:\n" + raw);
+
+  // Walk to find the matching closing bracket
+  const open = clean[start];
+  const close = open === "[" ? "]" : "}";
+  let depth = 0;
+  let end = -1;
+  for (let i = start; i < clean.length; i++) {
+    if (clean[i] === open)  depth++;
+    if (clean[i] === close) depth--;
+    if (depth === 0) { end = i; break; }
+  }
+
+  if (end === -1) throw new Error("Couldn't find end of JSON in response.\n\nRaw response:\n" + raw);
+
+  const jsonStr = clean.slice(start, end + 1);
+  try {
+    return JSON.parse(jsonStr);
+  } catch(e) {
+    throw new Error("JSON parse failed: " + e.message + "\n\nExtracted:\n" + jsonStr);
+  }
+}
+
+// ── Step 1: Parse ──────────────────────────────────────────────────────────
+function handleParse() {
+  const raw = document.getElementById("raw-input").value.trim();
+  setStatus("");
+  if (!raw) { setStatus("Paste some text first.", "error"); return; }
+  try {
+    parsedEvents = parseSASEDoc(raw);
+  } catch(e) {
+    setStatus("Parse failed: " + e.message, "error"); return;
+  }
+  if (parsedEvents.length === 0) {
+    setStatus("No events found. Check the format of your input.", "error"); return;
+  }
+  renderReview(parsedEvents);
+  setStatus(`Parsed ${parsedEvents.length} events.`, "success");
+}
+
+// ── Step 2: Render review ──────────────────────────────────────────────────
+function renderReview(events) {
+  document.getElementById("event-count-num").textContent = events.length;
+  const list = document.getElementById("event-list");
+  list.innerHTML = "";
+
+  events.forEach((event, i) => {
+    const card = document.createElement("div");
+    card.className = "event-card";
+    const attBadge = event.attendance !== null
+      ? `<span class="badge badge-blue">${event.attendance} attendees</span>`
+      : `<span class="badge badge-dim">no attendance</span>`;
+
+    card.innerHTML = `
+      <div class="event-card-header" onclick="toggleCard('review', ${i})">
+        <div class="event-title-group">
+          <span class="event-name">${escHtml(event.event_name)}</span>
+          ${attBadge}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="event-meta">${escHtml(event.date) || "no date"}</span>
+          <span class="chevron" id="chevron-review-${i}">▶</span>
+        </div>
+      </div>
+      <div class="event-card-body" id="body-review-${i}">
+        ${renderField("Pros", event.pros)}
+        ${renderField("Cons", event.cons)}
+        ${renderField("Comments", event.comments)}
+        ${renderField("Notes for Future", event.notes_for_future)}
+      </div>`;
+    list.appendChild(card);
+  });
+
+  show("step-review");
+  document.getElementById("step-review").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── Step 3: Label with AI ──────────────────────────────────────────────────
+async function handleLabel() {
+  const btn = document.getElementById("label-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Labeling with Gemini...`;
+  setStatus("Sending events to Gemini for position labeling...", "info");
+
+  const eventSummaries = parsedEvents.map((e, i) =>
+    `[${i}] ${e.event_name}
+Pros: ${e.pros.join("; ") || "none"}
+Cons: ${e.cons.join("; ") || "none"}
+Comments: ${e.comments.join("; ") || "none"}
+Notes: ${e.notes_for_future.join("; ") || "none"}`
+  ).join("\n\n");
+
+  const prompt = `${POSITION_CONTEXT}
+
+Below are ${parsedEvents.length} SASE events. For each event, return the board positions it should be assigned to.
+
+Return ONLY a JSON array with one object per event, like this:
+[
+  { "index": 0, "positions": ["Social Chair", "Treasurer"] },
+  { "index": 1, "positions": ["Multimedia Chair"] }
+]
+
+Do not include any explanation or markdown. Return only the raw JSON array.
+
+Events:
+${eventSummaries}`;
+
+  try {
+    const raw = await callGemini(prompt);
+    const labeled = extractJSON(raw);
+
+    labeled.forEach(({ index, positions }) => {
+      if (parsedEvents[index]) parsedEvents[index].positions = positions || [];
+    });
+
+    setStatus(`Labeled ${labeled.length} events. Review and edit below.`, "success");
+    renderLabels(parsedEvents);
+    show("step-labels");
+    document.getElementById("step-labels").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch(e) {
+    setStatus("Labeling failed: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "Label by Position with AI →";
+  }
+}
+
+// ── Step 3: Render label editor ────────────────────────────────────────────
+function renderLabels(events) {
+  const list = document.getElementById("label-list");
+  list.innerHTML = "";
+
+  events.forEach((event, i) => {
+    const card = document.createElement("div");
+    card.className = "event-card";
+
+    card.innerHTML = `
+      <div class="event-card-header" onclick="toggleCard('label', ${i})">
+        <div class="event-title-group">
+          <span class="event-name">${escHtml(event.event_name)}</span>
+          ${event.positions.length > 0
+            ? event.positions.map(p => `<span class="badge badge-green">${escHtml(p)}</span>`).join("")
+            : `<span class="badge badge-dim">unlabeled</span>`}
+        </div>
+        <span class="chevron" id="chevron-label-${i}">▶</span>
+      </div>
+      <div class="event-card-body" id="body-label-${i}">
+        <div class="field-label">Assigned Positions</div>
+        <div class="position-row" id="tags-${i}"></div>
+        <div class="add-position">
+          <select id="select-${i}">
+            ${POSITIONS.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join("")}
+          </select>
+          <button onclick="addPosition(${i})">+ Add</button>
+        </div>
+      </div>`;
+
+    list.appendChild(card);
+    renderTags(i);
+  });
+}
+
+function renderTags(i) {
+  const container = document.getElementById(`tags-${i}`);
+  if (!container) return;
+  container.innerHTML = parsedEvents[i].positions.length > 0
+    ? parsedEvents[i].positions.map(p =>
+        `<span class="position-tag">${escHtml(p)}
+          <button onclick="removePosition(${i}, '${escHtml(p)}')" title="Remove">✕</button>
+        </span>`
+      ).join("")
+    : `<span style="font-size:0.78rem;color:#444;font-style:italic;">No positions assigned</span>`;
+}
+
+function addPosition(i) {
+  const sel = document.getElementById(`select-${i}`);
+  const val = sel.value;
+  if (!parsedEvents[i].positions.includes(val)) {
+    parsedEvents[i].positions.push(val);
+    renderTags(i);
+    renderLabels(parsedEvents); // refresh badges in header
+  }
+}
+
+function removePosition(i, pos) {
+  parsedEvents[i].positions = parsedEvents[i].positions.filter(p => p !== pos);
+  renderTags(i);
+  renderLabels(parsedEvents);
+}
+
+// ── Step 4: Generate summaries ─────────────────────────────────────────────
+async function handleGenerate() {
+  const btn = document.getElementById("generate-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Generating summaries...`;
+  setStatus("Sending to Gemini for summary generation...", "info");
+
+  // Group events by position
+  const byPosition = {};
+  parsedEvents.forEach(event => {
+    (event.positions || []).forEach(pos => {
+      if (!byPosition[pos]) byPosition[pos] = [];
+      byPosition[pos].push(event);
+    });
+  });
+
+  const positionNames = Object.keys(byPosition).sort();
+
+  if (positionNames.length === 0) {
+    setStatus("No events have position labels. Go back and label them first.", "error");
+    btn.disabled = false;
+    btn.innerHTML = "Generate Summaries →";
+    return;
+  }
+
+  const eventsByPos = positionNames.map(pos => {
+    const events = byPosition[pos];
+    return `${pos}:\n${events.map(e =>
+      `- ${e.event_name}${e.attendance ? ` (${e.attendance} attendees)` : ""}
+  Pros: ${e.pros.join("; ") || "none"}
+  Cons: ${e.cons.join("; ") || "none"}
+  Comments: ${e.comments.join("; ") || "none"}
+  Notes for Future: ${e.notes_for_future.join("; ") || "none"}`
+    ).join("\n")}`;
+  }).join("\n\n");
+
+  const prompt = `You are helping a student organization board transition to the next year's leadership.
+
+For each board position below, write a short planning summary for the incoming board member. Each summary should:
+- Start with a list of events handled this year (with attendance if known)
+- Follow with 3-5 sentences covering: what worked well, recurring issues, and the most important things to keep in mind for next year
+- Be direct and practical — this person is planning events, not reading a report
+- Use the event feedback (pros, cons, comments, notes for future) as your source
+
+Return ONLY a JSON array like this:
+[
+  {
+    "position": "Social Chair",
+    "events": ["UF x UCF Springs (25)", "Town of Salem (22)"],
+    "summary": "..."
+  }
+]
+
+No explanation, no markdown, just the raw JSON array.
+
+Data:
+${eventsByPos}`;
+
+  try {
+    const raw = await callGemini(prompt);
+    const summaries = extractJSON(raw);
+    renderOutput(summaries);
+    show("step-output");
+    setStatus("Summaries generated.", "success");
+    document.getElementById("step-output").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch(e) {
+    setStatus("Generation failed: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "Generate Summaries →";
+  }
+}
+
+// ── Step 4: Render output ──────────────────────────────────────────────────
+function renderOutput(summaries) {
+  const list = document.getElementById("output-list");
+  list.innerHTML = "";
+
+  summaries.forEach(({ position, events, summary }) => {
+    const card = document.createElement("div");
+    card.className = "event-card";
+    card.style.marginBottom = "20px";
+
+    const eventsHtml = (events || []).map(e =>
+      `<span class="badge badge-blue" style="margin-right:4px;margin-bottom:4px;">${escHtml(e)}</span>`
+    ).join("");
+
+    const id = `output-${position.replace(/\s+/g, "-")}`;
+
+    card.innerHTML = `
+      <div style="padding:18px 20px;border-bottom:1px solid #2a2a2e;">
+        <div style="font-size:0.9rem;font-weight:700;color:#fff;margin-bottom:10px;">${escHtml(position)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">${eventsHtml}</div>
+        <div style="font-size:0.82rem;color:#bbb;line-height:1.7;" id="${id}">${escHtml(summary)}</div>
+      </div>
+      <div style="padding:10px 20px;">
+        <button class="secondary" onclick="copyOutput('${id}', this)">Copy paragraph</button>
+      </div>`;
+
+    list.appendChild(card);
+  });
+}
+
+function copyOutput(id, btn) {
+  const text = document.getElementById(id)?.textContent || "";
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = "Copy paragraph", 1500);
+  });
+}
+
+// ── Shared helpers ─────────────────────────────────────────────────────────
+function toggleCard(ns, i) {
+  const body = document.getElementById(`body-${ns}-${i}`);
+  const chevron = document.getElementById(`chevron-${ns}-${i}`);
+  const isOpen = body.classList.contains("open");
+  body.classList.toggle("open", !isOpen);
+  chevron.classList.toggle("open", !isOpen);
+}
+
+function renderField(label, items) {
+  const content = items.length > 0
+    ? `<div class="field-items">${items.map(i => `<div class="field-item">${escHtml(i)}</div>`).join("")}</div>`
+    : `<div class="field-empty">none</div>`;
+  return `<div class="field-group"><div class="field-label">${label}</div>${content}</div>`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function show(id) { document.getElementById(id).classList.remove("hidden"); }
+
+function setStatus(msg, type = "") {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = type;
+}
+</script>
+</body>
+</html>
