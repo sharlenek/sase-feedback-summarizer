@@ -265,6 +265,7 @@ Sort each event's feedback into one or more board positions using the definition
 - If an event was run by SASE Interns, sort it under "Member Involvement Chair" AND the position that owns that event type.
 - If feedback mentions dates, times, room conflicts, or scheduling issues, always flag it under "Secretary" in addition to the primary position.
 - If feedback mentions money, costs, budgeting, reimbursements, supplies, or inventory, always flag it under "Treasurer" in addition to the primary position.
+- If feedback mentions tabling, advertising, Instagram, or general publicity, flag it under "Public Relations" in addition to the primary position.
 - If an event has no clear owner, use the event content and feedback to infer the closest match.
 
 Non-Board Categories:
@@ -817,18 +818,31 @@ ${POSITION_SUMMARY_REF}
 
 For each board position, write a planning summary for the incoming board member using ONLY the provided event data.
 
-RULES — follow these strictly:
-- Be specific. Quote or closely reference actual feedback, event names, attendance numbers, and real details from the data. Never write anything that could apply to any club or any event.
-- Be actionable. Every sentence should tell the person something they can actually do differently. Avoid observations that have no follow-up action.
-- No common sense. Do not write things like "make sure to promote events" or "communication is important" unless the data gives a specific example of what worked or failed and why.
-- No vague praise. Do not write "the event was well received" — say what specifically worked and why based on the feedback.
-- If the data mentions a specific problem, name it. If it mentions a specific solution, name it.
-- 4-6 sentences max. Every sentence must contain at least one specific detail from the data.
+CORE GOAL: The summary should help the incoming board member plan FUTURE events, not recap past ones. Most events will not repeat exactly, so don't write a sentence per event. Instead, extract patterns, lessons, and principles that apply across events.
 
-POSITION-SPECIFIC FOCUS:
-- Treasurer: Focus on budget allocations per event — which events went over, what supplies ran short, what costs surprised people, what was worth the spend vs not. Name specific dollar amounts or items if mentioned.
-- Secretary: Focus on which rooms worked and which didn't, which time slots had conflicts or low turnout, which dates overlapped with other high-traffic events. Name specific rooms, times, and dates from the data.
-- All other positions: Focus on what specific format, activity, or decision made an event succeed or fail. Name the events and what happened.
+HOW TO THINK ABOUT THE DATA:
+- For ONE-OFF events (themed GBMs, one-time socials, unique workshops): Extract the underlying lesson, not the event-specific detail. "Icebreaker instructions were confusing at GBM 1" → "Icebreaker instructions need to be explicit and demonstrated, not just explained verbally." "Onigiri making was a pain point" → "Avoid food activities with complex prep steps that slow down the event."
+- For REPEATING events (National Conference, banquets, Adopt-A-Street, SASEHacks, elections, sports seasons, M&M program, spring/fall planning): Be specific. Name what worked, what didn't, and exact details like timing, costs, attendance, logistics. These will happen again.
+
+RULES:
+- Group insights by theme, not by event. Write about patterns across multiple events, not a recap of each one.
+- Be specific about the insight, not the event. "Food prep activities consistently create bottlenecks" is more useful than "GBM 2 had onigiri issues."
+- Name events only when they repeat or when the insight is so specific it needs context.
+- No common sense filler. Every sentence must contain a real, non-obvious insight from the data.
+- For Treasurer: focus on budget patterns — which event types run over, what supply categories get underestimated, recurring cost surprises.
+- For Secretary: focus on room and timing patterns — which rooms work, which time slots conflict, which weeks are too busy.
+- 4-6 sentences. No bullet points inside the summary.
+
+HERE ARE TWO EXAMPLES OF GOOD SUMMARIES. Match this style, tone, and level of abstraction:
+
+Example 1 — Networking Chair:
+"Virtual game nights are generally unsuccessful — events need more structure and motivation for alumni to show up. Events such as Networking Night were successful and engaging for both attendees and alumni, but it was difficult to get high turnout. Word of mouth, especially personal interactions at SASE Interns meetings, seems to be the strongest way to guarantee attendance. Personable alumni are important — there was negative feedback for an alumni spotlight who worked at Tesla but was described as very boring, so vet speakers for energy and relatability, not just prestige. LinkedIn posts get very low interaction when they don't have pictures, and high interaction when they include faces of members that allow them to repost."
+
+Example 2 — General Body Meetings:
+"Avoid food activities with complex preparation as they create sanitation concerns and eat into event time. GBM activities are often unpredictable — they tend to run long or have unclear instructions, so always build in a hard cutoff time and run through activities beforehand. Icebreakers have consistently failed to break up established friend groups; prioritize formats that require members to find and interact with someone they don't know. Ask chairs and board members for slide and activity feedback early in the planning process — feedback given only a few days before the event leaves no room for meaningful changes. Having a setup checklist covering things like sign-in QR placement, Kahoot login, and merch availability would prevent recurring day-of issues."
+
+Notice in both examples: insights are grouped by theme not by event, specific real feedback is referenced without recapping the event, and every sentence is actionable for future planning. Never write a sentence that starts with an event name.
+Keep feedback specific when necessary, but abstract away from event-specific details to underlying principles whenever possible.
 
 Return ONLY a raw JSON array, no explanation, no markdown:
 [
