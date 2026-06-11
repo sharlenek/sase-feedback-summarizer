@@ -206,6 +206,7 @@
 
 <div id="status"></div>
 
+<script src="config.js"></script>
 <script>
 // ── Board positions list ───────────────────────────────────────────────────
 const POSITIONS = [
@@ -405,9 +406,6 @@ function parseSASEDoc(rawText) {
 // ── State ──────────────────────────────────────────────────────────────────
 let parsedEvents = [];
 
-// ── Config — paste your Gemini API key here ────────────────────────────────
-const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
-
 // ── Gemini API ─────────────────────────────────────────────────────────────
 async function callGemini(prompt) {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
@@ -415,7 +413,7 @@ async function callGemini(prompt) {
   }
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
     {
       method: "POST",
       headers: {
@@ -533,28 +531,22 @@ async function handleLabel() {
   btn.innerHTML = `<span class="spinner"></span>Labeling with Gemini...`;
   setStatus("Sending events to Gemini for position labeling...", "info");
 
-  const eventSummaries = parsedEvents.map((e, i) =>
-    `[${i}] ${e.event_name}
-Pros: ${e.pros.join("; ") || "none"}
-Cons: ${e.cons.join("; ") || "none"}
-Comments: ${e.comments.join("; ") || "none"}
-Notes: ${e.notes_for_future.join("; ") || "none"}`
-  ).join("\n\n");
+  // Labeling only needs event names — no full content needed
+  const eventNames = parsedEvents.map((e, i) => `[${i}] ${e.event_name}`).join("\n");
 
   const prompt = `${POSITION_CONTEXT}
 
-Below are ${parsedEvents.length} SASE events. For each event, return the board positions it should be assigned to.
+Assign each of the following SASE events to one or more board positions based on the event name alone.
+Use the rules and position descriptions above to infer the correct labels.
 
-Return ONLY a JSON array with one object per event, like this:
+Return ONLY a raw JSON array, no explanation, no markdown:
 [
   { "index": 0, "positions": ["Social Chair", "Treasurer"] },
   { "index": 1, "positions": ["Multimedia Chair"] }
 ]
 
-Do not include any explanation or markdown. Return only the raw JSON array.
-
 Events:
-${eventSummaries}`;
+${eventNames}`;
 
   try {
     const raw = await callGemini(prompt);
@@ -675,15 +667,19 @@ async function handleGenerate() {
     ).join("\n")}`;
   }).join("\n\n");
 
-  const prompt = `You are helping a student organization board transition to the next year's leadership.
+  // Compact one-line position reference — just enough for the summary writer
+  const POSITION_SUMMARY_REF = `Board positions for reference:
+General Body Meetings | President | Internal Vice President | External Vice President | Treasurer | Secretary | Public Relations | Advancement Chair | Community Outreach Chair | Fundraising Chair | Gator Rover President | Hackathon Chair | Historian | Member Involvement Chair | Multimedia Chair | Networking Chair | Projects Chair | Science Chair | Social Chair | Sports Coordinator | Webmaster`;
+
+  const prompt = `You are helping a SASE student organization board transition to the next year's leadership.
+${POSITION_SUMMARY_REF}
 
 For each board position below, write a short planning summary for the incoming board member. Each summary should:
-- Start with a list of events handled this year (with attendance if known)
-- Follow with 3-5 sentences covering: what worked well, recurring issues, and the most important things to keep in mind for next year
+- Be 3-5 sentences: what worked well, recurring issues, and the most important things to keep in mind for next year
 - Be direct and practical — this person is planning events, not reading a report
-- Use the event feedback (pros, cons, comments, notes for future) as your source
+- Draw from the pros, cons, comments, and notes for future in the event data
 
-Return ONLY a JSON array like this:
+Return ONLY a raw JSON array, no explanation, no markdown:
 [
   {
     "position": "Social Chair",
@@ -691,8 +687,6 @@ Return ONLY a JSON array like this:
     "summary": "..."
   }
 ]
-
-No explanation, no markdown, just the raw JSON array.
 
 Data:
 ${eventsByPos}`;
@@ -779,6 +773,6 @@ function setStatus(msg, type = "") {
   el.textContent = msg;
   el.className = type;
 }
-</script>
+</scrip>
 </body>
 </html>
